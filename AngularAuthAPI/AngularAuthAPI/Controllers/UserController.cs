@@ -45,6 +45,11 @@ namespace AngularAuthAPI.Controllers
             });
         }
 
+        /// <summary>
+        /// Register user
+        /// </summary>
+        /// <param name="userObj"></param>
+        /// <returns></returns>
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] User userObj)
         {
