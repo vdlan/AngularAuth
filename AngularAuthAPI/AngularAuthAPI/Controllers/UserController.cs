@@ -1,4 +1,5 @@
 ﻿using AngularAuthAPI.Context;
+using AngularAuthAPI.Helpers;
 using AngularAuthAPI.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -57,6 +58,10 @@ namespace AngularAuthAPI.Controllers
             {
                 return BadRequest();
             }
+
+            userObj.Password = PasswordHasher.HashPassword(userObj.Password);
+            userObj.Role = "User";
+            userObj.Token = "";
 
             await _context.Users.AddAsync(userObj);
             await _context.SaveChangesAsync();
