@@ -33,12 +33,18 @@ namespace AngularAuthAPI.Controllers
             }
 
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.UserName == userObj.UserName && u.Password == userObj.Password);
+                .FirstOrDefaultAsync(u => u.UserName == userObj.UserName);
 
-            // Check user exist
+            // Check username exist
             if(user == null)
             {
-                return NotFound(new { Message = "User not found!" });
+                return NotFound(new { Message = "Username or password is incorrect!" });
+            }
+
+            // Check password
+            if(!PasswordHasher.VerifyPassword(userObj.Password, user.Password))
+            {
+                return BadRequest(new { Message = "Username or password is incorrect!" });
             }
 
             return Ok(new
