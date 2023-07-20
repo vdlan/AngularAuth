@@ -3,6 +3,9 @@ using AngularAuthAPI.Helpers;
 using AngularAuthAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -47,9 +50,13 @@ namespace AngularAuthAPI.Controllers
                 return BadRequest(new { Message = "Username or password is incorrect!" });
             }
 
+            // Generate token
+            user.Token = CreateJwtToken(user);
+
             return Ok(new
             {
-                Message = "Login Success!"
+                Message = "Login Success!",
+                Token = user.Token
             });
         }
 
@@ -117,16 +124,43 @@ namespace AngularAuthAPI.Controllers
             });
         }
 
+        /// <summary>
+        /// Get all users
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task<ActionResult<User>> GetAllUsers()
+        {
+            var users = await _context.Users.ToListAsync();
+
+            return Ok(users);
+        }
+
+        /// <summary>
+        /// Check username has existed
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns></returns>
         private async Task<bool> CheckUsernameExistAsync(string username)
         {
             return await _context.Users.AnyAsync(u => u.UserName == username);
         }
 
+        /// <summary>
+        /// Check email has existed
+        /// </summary>
+        /// <param name="email"></param>
+        /// <returns></returns>
         private async Task<bool> CheckEmailExistAsync(string email)
         {
             return await _context.Users.AnyAsync(u => u.Email == email);
         }
 
+        /// <summary>
+        /// Check password is correct
+        /// </summary>
+        /// <param name="password"></param>
+        /// <returns></returns>
         private string CheckPasswordStrength(string password)
         {
             var sb = new StringBuilder();
@@ -149,6 +183,11 @@ namespace AngularAuthAPI.Controllers
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Check email is valid
+        /// </summary>
+        /// <param name="email"></param>
+        /// <returns></returns>
         private string CheckEmailValid(string email)
         {
             var sb = new StringBuilder();
@@ -159,6 +198,34 @@ namespace AngularAuthAPI.Controllers
             }
 
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Create jwt token
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        private string CreateJwtToken(User user)
+        {
+            var jwtTokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes("this is a secret key, don't show it"); // secret key
+            var identity = new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Role, user.Role),
+                new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}")
+            });
+            var credentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = identity,
+                Expires = DateTime.Now.AddDays(1),
+                SigningCredentials = credentials,
+            };
+
+            var token = jwtTokenHandler.CreateToken(tokenDescriptor);
+
+            return jwtTokenHandler.WriteToken(token);
         }
     }
 }
