@@ -39,9 +39,10 @@ export class LoginComponent implements OnInit {
       console.log(this.loginForm.value);
       this.auth.login(this.loginForm.value).subscribe({
         next: (res) => {
-          this.toast.success({detail: "SUCCESS", summary: res.message, duration: 3000});
           this.loginForm.reset();
-          this.router.navigate(['']);
+          this.auth.storeToken(res.token);
+          this.toast.success({detail: "SUCCESS", summary: res.message, duration: 3000});
+          this.router.navigate(['dashboard']);
         },
         error: (err) => {
           this.toast.error({detail: "ERROR", summary: err.message, duration: 3000});
