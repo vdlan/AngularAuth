@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { NgToastService } from 'ng-angular-popup';
 import ValidateForm from 'src/app/helpers/validateform';
 import { AuthService } from 'src/app/services/auth.service';
+import { UserStoreService } from 'src/app/services/user-store.service';
 
 @Component({
   selector: 'app-login',
@@ -19,7 +20,8 @@ export class LoginComponent implements OnInit {
   constructor(private fb: FormBuilder,
     private auth: AuthService,
     private router: Router,
-    private toast: NgToastService) { }
+    private toast: NgToastService,
+    private userStore: UserStoreService) { }
 
   ngOnInit(): void {
     this.loginForm = this.fb.group({
@@ -41,6 +43,9 @@ export class LoginComponent implements OnInit {
         next: (res) => {
           this.loginForm.reset();
           this.auth.storeToken(res.token);
+          let tokenPayload = this.auth.decodedToken();
+          this.userStore.setFullNameForStore(tokenPayload.name);
+          this.userStore.setRoleForStore(tokenPayload.role);
           this.toast.success({detail: "SUCCESS", summary: res.message, duration: 3000});
           this.router.navigate(['dashboard']);
         },
@@ -51,7 +56,7 @@ export class LoginComponent implements OnInit {
     }
     else {
       ValidateForm.validateAllForm(this.loginForm);
-      alert("Form is invalid")
+      this.toast.error({detail: "ERROR", summary: 'Form is invalid', duration: 3000});
     }
   }
 
