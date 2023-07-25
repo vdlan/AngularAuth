@@ -178,6 +178,7 @@ namespace AngularAuthAPI.Controllers
             var newAccessToken = CreateJwtToken(user);
             var newRefreshToken = CreateRefreshToken();
             user.RefreshToken = newRefreshToken;
+            user.RefreshTokenExpireTime = DateTime.Now.AddDays(1);
 
             await _context.SaveChangesAsync();
 
