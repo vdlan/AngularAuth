@@ -156,6 +156,38 @@ namespace AngularAuthAPI.Controllers
             return await _context.Users.AnyAsync(u => u.UserName == username);
         }
 
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh(TokenApiDto tokenApiDto)
+        {
+            if(tokenApiDto == null)
+            {
+                return BadRequest("Invalid Request!");
+            }
+
+            string accessToken = tokenApiDto.AccessToken;
+            string refreshToken = tokenApiDto.RefreshToken;
+            var principal = GetPrincipalFromExpiredToken(accessToken);
+            var username = principal.Identity.Name;
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName == username);
+
+            if(user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpireTime <= DateTime.Now)
+            {
+                return BadRequest("Invalid Request!");
+            }
+
+            var newAccessToken = CreateJwtToken(user);
+            var newRefreshToken = CreateRefreshToken();
+            user.RefreshToken = newRefreshToken;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new TokenApiDto
+            {
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshToken,
+            });
+        }
+
         /// <summary>
         /// Check email has existed
         /// </summary>
