@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { NgToastService } from 'ng-angular-popup';
 import ValidateForm from 'src/app/helpers/validateform';
 import { AuthService } from 'src/app/services/auth.service';
+import { ResetPasswordService } from 'src/app/services/reset-password.service';
 import { UserStoreService } from 'src/app/services/user-store.service';
 
 @Component({
@@ -23,7 +24,8 @@ export class LoginComponent implements OnInit {
     private auth: AuthService,
     private router: Router,
     private toast: NgToastService,
-    private userStore: UserStoreService) { }
+    private userStore: UserStoreService,
+    private resetService: ResetPasswordService) { }
 
   ngOnInit(): void {
     this.loginForm = this.fb.group({
@@ -49,17 +51,17 @@ export class LoginComponent implements OnInit {
           let tokenPayload = this.auth.decodedToken();
           this.userStore.setFullNameForStore(tokenPayload.name);
           this.userStore.setRoleForStore(tokenPayload.role);
-          this.toast.success({detail: "SUCCESS", summary: res.message, duration: 3000});
+          this.toast.success({ detail: "SUCCESS", summary: res.message, duration: 3000 });
           this.router.navigate(['dashboard']);
         },
         error: (err) => {
-          this.toast.error({detail: "ERROR", summary: err.message, duration: 3000});
+          this.toast.error({ detail: "ERROR", summary: err.message, duration: 3000 });
         }
       });
     }
     else {
       ValidateForm.validateAllForm(this.loginForm);
-      this.toast.error({detail: "ERROR", summary: 'Form is invalid', duration: 3000});
+      this.toast.error({ detail: "ERROR", summary: 'Form is invalid', duration: 3000 });
     }
   }
 
@@ -72,11 +74,19 @@ export class LoginComponent implements OnInit {
   }
 
   confirmToSend() {
-    if(this.checkValidEmail(this.resetPasswordEmail)){
+    if (this.checkValidEmail(this.resetPasswordEmail)) {
       console.log(this.resetPasswordEmail);
-      this.resetPasswordEmail = '';
-      const buttonRef = document.getElementById('closeBtn');
-      buttonRef?.click();
+
+      this.resetService.sendResetPasswordLink(this.resetPasswordEmail).subscribe({
+        next: (res) => {
+          this.resetPasswordEmail = '';
+          const buttonRef = document.getElementById('closeBtn');
+          buttonRef?.click();
+        },
+        error: (err) => {
+          this.toast.error({ detail: "ERROR", summary: 'Something went wrong!', duration: 3000 });
+        }
+      });
     }
   }
 }
