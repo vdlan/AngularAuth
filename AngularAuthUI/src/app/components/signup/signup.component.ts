@@ -15,7 +15,6 @@ export class SignupComponent implements OnInit {
   isText: boolean = false;
   eyeIcon: string = "fa-eye-slash";
   signUpForm!: FormGroup;
-  public isValidEmail!: boolean;
 
   constructor(private fb: FormBuilder,
     private auth: AuthService,
