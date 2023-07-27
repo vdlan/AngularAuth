@@ -10,7 +10,7 @@ import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { NgToastModule } from 'ng-angular-popup'
 import { TokenInterceptor } from './interceptors/token.interceptor';
-import { ResetComponent } from './reset/reset.component';
+import { ResetComponent } from './components/reset/reset.component';
 
 @NgModule({
   declarations: [
